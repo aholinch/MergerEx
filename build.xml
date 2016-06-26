@@ -1,0 +1,87 @@
+<!--
+From Ant Tutorial
+http://ant.apache.org/manual/tutorial-HelloWorldWithAnt.html
+-->
+<project name="MergerEx" basedir="." default="jar">
+
+  <property name="src.dir"   value="./src"/>
+
+  <property name="lib.dir"   value="./lib"/>
+  <property name="build.dir"   value="build"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <property name="jar.dir"   value="${build.dir}/jar"/>
+
+  <property name="main-class"  value="edu.gmu.cds.ui.search.MainPanel"/>
+  <property name="lib.dir"     value="lib"/>
+  <property name="img.dir"     value="images"/>
+  <property name="loc.dir"     value="locales"/>
+
+  <path id="classpath">
+  	<dirset dir="${classes.dir}" />
+        <fileset dir="${lib.dir}">
+            <include name="*.jar" />
+        </fileset>
+  </path>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="${classes.dir}"/>
+    <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" target="1.6" source="1.6" debug="true">
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+	<mkdir dir="${jar.dir}"/>
+  	<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}" 
+         compress="true" duplicate="preserve">
+      <manifest>
+        <attribute name="Main-Class" value="${main-class}"/>
+      </manifest>
+      <fileset dir="." includes="${data.dir}/**,images/**"/>
+    </jar>
+  </target>
+
+  <target name="run-search" depends="jar">
+    <java classname="edu.gmu.cds.ui.search.MainPanel" fork="true">
+      <classpath>
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+        <path location="${jar.dir}/${ant.project.name}.jar"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="run-target" depends="jar">
+    <java classname="edu.gmu.cds.ui.target.MainPanel" fork="true">
+      <classpath>
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+        <path location="${jar.dir}/${ant.project.name}.jar"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="docs">
+      <javadoc packagenames="edu.*"
+	           sourcepath="src"
+	           defaultexcludes="yes"
+	           destdir="doc/api"
+	           author="true"
+	           version="true"
+	           use="true"
+	           windowtitle="MergerEx">
+      </javadoc>
+  </target>
+  	
+  <target name="clean-build" depends="clean,jar"/>
+
+  <target name="main" depends="clean,run-search"/>
+
+</project>
+
