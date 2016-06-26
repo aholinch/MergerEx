@@ -230,6 +230,11 @@ public class ResourceManager
 		{
 			is = getIS("/locales/"+resourceName+".properties",true);			
 		}
+		
+		if(is == null)
+		{
+			is = getIS("../locales/"+resourceName+".properties",true);
+		}
 
 		InputStream defaultIs = is;
 		
