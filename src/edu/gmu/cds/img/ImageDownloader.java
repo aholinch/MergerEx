@@ -3,6 +3,7 @@
  **************************/
 package edu.gmu.cds.img;
 
+import edu.gmu.cds.sdss.SDSSCasQuery;
 import edu.gmu.cds.util.FileUtil;
 import edu.gmu.cds.util.URLUtil;
 
@@ -16,6 +17,7 @@ public class ImageDownloader
 	public static final int DSS_POSS2_BLUE = 6;
 	public static final int DSS_POSS2_IR = 7;
 	public static final int DR9 = 8;
+	public static final int DR17 = 9;
 	
 	/*
     <option value="poss2ukstu_red" selected>POSS2/UKSTU Red</option>
@@ -30,9 +32,10 @@ public class ImageDownloader
     */
 	public static final String DR8CASIMGURL = "http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?ra=RA&dec=DEC&scale=SCALE&width=NX&height=NY";
     public static final String DR7CASIMGURL = "http://casjobs.sdss.org/ImgCutoutDR7/getjpeg.aspx?ra=RA&dec=DEC&scale=SCALE&width=NX&height=NY";
-    public static final String MAST_DSSURL  = "http://stdatu.stsci.edu/cgi-bin/dss_search?v=PLATE&r=RA&d=DEC&e=J2000&h=NY&w=NX&f=gif&c=none&fov=NONE&v3=";
-	public static final String DR9CASIMGURL = "http://skyservice.pha.jhu.edu/DR9/ImgCutout/getjpeg.aspx?ra=RA&dec=DEC&scale=SCALE&width=NX&height=NY";
-	
+    //public static final String MAST_DSSURL  = "http://stdatu.stsci.edu/cgi-bin/dss_search?v=PLATE&r=RA&d=DEC&e=J2000&h=NY&w=NX&f=gif&c=none&fov=NONE&v3=";
+    public static final String MAST_DSSURL  = "https://archive.stsci.edu/cgi-bin/dss_search?v=PLATE&r=RA&d=DEC&e=J2000&h=NY&w=NX&f=gif&c=none&fov=NONE&v3=";
+    public static final String DR9CASIMGURL = "http://skyservice.pha.jhu.edu/DR9/ImgCutout/getjpeg.aspx?ra=RA&dec=DEC&scale=SCALE&width=NX&height=NY";
+	public static final String DR17CASIMGURL = SDSSCasQuery.CASIMGURL_DR17;
     /**
      * 
      * @param type
@@ -68,6 +71,7 @@ public class ImageDownloader
 			case DR8:
 			case DR7:
 			case DR9:
+			case DR17:
 				if(nx > 1024)
 				{
 					scale = (widthArcMin*60.0d/1024.0d);
@@ -112,6 +116,10 @@ public class ImageDownloader
 				break;
 			case DR9:
 				url = DR9CASIMGURL;
+				ext = "jpg";
+				break;
+			case DR17:
+				url = DR17CASIMGURL;
 				ext = "jpg";
 				break;
 			case DSS_POSS1_RED:

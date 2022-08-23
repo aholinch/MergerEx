@@ -81,6 +81,9 @@ public class SDSSObject extends ObjectInfo
 	DRZ + ",p." + PRU + ",p." + PRG + ",p." + PRR + ",p." + PRI + ",p." + PRZ + ",p." + PR50U + ",p." + PR50G + ",p." +
 	PR50R + ",p." + PR50I + ",p." + PR50Z + ",p." + PR90U + ",p." + PR90G + ",p." + PR90R + ",p." + PR90I + ",p." + PR90Z;
 
+	public static final String FIELDS1_DR17 = FIELDS1_DR9;
+	public static final String FIELDS1P_DR17 = FIELDS1P_DR9;
+	
 	// DR7 values
 	
 	public static final String FIELDS1_DR7 = ""+OBJID + "," +
@@ -149,7 +152,11 @@ public class SDSSObject extends ObjectInfo
 	{
 		List<SDSSObject> list = null;
 		String tmpXml = xml.toLowerCase();
-		if(tmpXml.contains("<row") && tmpXml.contains("</row>"))
+		if(tmpXml.contains("<item") && tmpXml.contains("</item>"))
+		{
+			list = parseObjectsFromXMLItemsString(xml);
+		}
+		else if(tmpXml.contains("<row") && tmpXml.contains("</row>"))
 		{
 			list = parseObjectsFromXMLTagString(xml);
 		}
@@ -180,7 +187,27 @@ public class SDSSObject extends ObjectInfo
 		}
 		return list;
 	}
-	
+
+	public static List<SDSSObject> parseObjectsFromXMLItemsString(String xml)
+	{
+		List<SDSSObject> list = new ArrayList<SDSSObject>(5);
+		xml = xml.toLowerCase();
+		int ind1 = xml.indexOf("<row>");
+		int ind2 = xml.indexOf("</row>");
+		while(ind1 > 0 && ind2 > ind1)
+		{
+			String str = xml.substring(ind1,ind2+6);
+			SDSSObject obj = SDSSObject.parseFromXMLItemStringRow(str);
+			if(obj != null)
+			{
+				list.add(obj);
+			}
+			ind1 = xml.indexOf("<row>",ind2);
+			if(ind1>0)ind2 = xml.indexOf("</row>",ind1);
+		}
+		return list;
+	}
+
 	public static List<SDSSObject> parseObjectsFromXMLAttributesString(String xml)
 	{
 		List<SDSSObject> list = new ArrayList<SDSSObject>(5);
@@ -230,7 +257,11 @@ public class SDSSObject extends ObjectInfo
 	
 	public static SDSSObject parseFromXMLString(String xml)
 	{
-		if(xml.toLowerCase().contains("</row>"))
+		if(xml.toLowerCase().contains("item name"))
+		{
+			return parseFromXMLItemString(xml);			
+		}
+		else if(xml.toLowerCase().contains("</row>"))
 		{
 			return parseFromXMLTagString(xml);
 		}
@@ -291,6 +322,154 @@ public class SDSSObject extends ObjectInfo
 		return obj;
 	}
 	
+	public static SDSSObject parseFromXMLItemString(String xml)
+	{
+		SDSSObject obj = null;
+		xml = xml.toLowerCase();
+		int ind1 = xml.indexOf("<row");
+		int ind2 = xml.indexOf("</row>");
+		if(ind2 > ind1 && ind1 > -1)
+		{
+			String str = xml.substring(ind1,ind2+6);
+			obj = parseFromXMLItemStringRow(str);
+		}
+		return obj;
+	}
+	
+	public static SDSSObject parseFromXMLItemStringRow(String xml)
+	{
+	
+		SDSSObject obj = new SDSSObject();
+		int ind1 = 0;
+		int ind2 = 0;
+		String str = xml.substring(5,xml.length()-6).trim();
+		str = str.replaceAll("</item>", "\n");
+		str = str.replaceAll("\r\n", "\n");
+		str = str.replaceAll("\n\n", "\n");
+		str = str.replaceAll("\n\n", "\n");
+		String items[] = str.split("\n");
+		
+		String item = null;
+		String name = null;
+		String val = null;
+		for(int i=0; i<items.length; i++)
+		{
+			item = items[i];
+			ind1 = item.indexOf("name=");
+			if(ind1<0)continue;
+			ind1+=6;
+			ind2=item.indexOf('"',ind1);
+			name = item.substring(ind1,ind2);
+			ind2 = item.indexOf('>');
+			val = item.substring(ind2+1).trim();
+			//System.out.println(name + "\t" + val + "\t" + item);
+			
+			if(name.equalsIgnoreCase(OBJID))
+			{
+				obj.objID=val;
+				obj.name = val;
+			}
+			else if(name.equalsIgnoreCase(RA))
+			{
+				obj.raDeg=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(DEC))
+			{
+				obj.decDeg=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(GALLON))
+			{
+				obj.galLon=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(GALLAT))
+			{
+				obj.galLat=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(DRU))
+			{
+				obj.u=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(DRG))
+			{
+				obj.g=Double.parseDouble(val);
+				obj.magnitude=obj.g;
+			}
+			else if(name.equalsIgnoreCase(DRR))
+			{
+				obj.r=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(DRI))
+			{
+				obj.i=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(DRZ))
+			{
+				obj.z=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PRU))
+			{
+				obj.petroRadU=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PRG))
+			{
+				obj.petroRadG=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PRR))
+			{
+				obj.petroRadR=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PRI))
+			{
+				obj.petroRadI=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PRZ))
+			{
+				obj.petroRadZ=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR50U))
+			{
+				obj.petroR50U=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR50G))
+			{
+				obj.petroR50G=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR50R))
+			{
+				obj.petroR50R=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR50I))
+			{
+				obj.petroR50I=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR50Z))
+			{
+				obj.petroR50Z=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR90U))
+			{
+				obj.petroR90U=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR90G))
+			{
+				obj.petroR90G=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR90R))
+			{
+				obj.petroR90R=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR90I))
+			{
+				obj.petroR90I=Double.parseDouble(val);
+			}
+			else if(name.equalsIgnoreCase(PR90Z))
+			{
+				obj.petroR90Z=Double.parseDouble(val);
+			}
+		}
+
+		return obj;
+	}
 	/**
 	 * Construct an SdssObject and populate from xml.  This method expects
 	 * values from the PhotoObjAll table.  No spec (redshift) data is handled
@@ -450,7 +629,21 @@ public class SDSSObject extends ObjectInfo
 	{
 		// find <Row and </Row>
 		String tmpXml = xml.toLowerCase();
-		
+		if(tmpXml.contains("name=\"z\""))
+		{
+			int ind = tmpXml.indexOf("name=\"z\"");
+			ind+=9;
+			int ind2 = tmpXml.indexOf("<",ind);
+			specZ = Double.parseDouble(tmpXml.substring(ind,ind2).trim());
+			
+			ind = tmpXml.indexOf("name=\"zerr\"");
+			ind+=12;
+			ind2 = tmpXml.indexOf("<",ind);
+			specZErr = Double.parseDouble(tmpXml.substring(ind,ind2).trim());
+			
+			return;
+		}
+
 		int ind = tmpXml.indexOf("<row");
 		if(ind == -1)
 		{
@@ -490,6 +683,20 @@ public class SDSSObject extends ObjectInfo
 	{
 		// find <Row and </Row>
 		String tmpXml = xml.toLowerCase();
+		if(tmpXml.contains("name=\"z\""))
+		{
+			int ind = tmpXml.indexOf("name=\"z\"");
+			ind+=9;
+			int ind2 = tmpXml.indexOf("<",ind);
+			photoZ = Double.parseDouble(tmpXml.substring(ind,ind2).trim());
+			
+			ind = tmpXml.indexOf("name=\"zerr\"");
+			ind+=12;
+			ind2 = tmpXml.indexOf("<",ind);
+			photoZErr = Double.parseDouble(tmpXml.substring(ind,ind2).trim());
+			
+			return;
+		}
 		
 		int ind = tmpXml.indexOf("<row");
 		if(ind == -1)
@@ -761,7 +968,7 @@ public class SDSSObject extends ObjectInfo
     	redshift = specZ;
     	if(specZ <=0)
     	{
-    		if(photoZErr < photoZ2Err)
+    		if(photoZErr < photoZ2Err || photoZ2Err == 0)
     		{
     			redshift = photoZ;
     		}

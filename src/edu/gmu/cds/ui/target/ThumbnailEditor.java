@@ -189,6 +189,12 @@ public class ThumbnailEditor extends JPanel implements ActionListener, ObjectInf
         		code = ImageDownloader.DR9;
         		ext = ".jpg";
         	}
+        	else if(src.equals("DR17"))
+        	{
+        		scale = 0.25d;
+        		code = ImageDownloader.DR17;
+        		ext = ".jpg";
+        	}
         }
         
         thumbName += "tmp" + ext;

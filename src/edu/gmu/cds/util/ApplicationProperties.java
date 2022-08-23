@@ -121,7 +121,7 @@ public class ApplicationProperties extends BaseProperties
 		initDir();
 		defaultFilename="merger.props";
 		workingDir = getDefaultDir();
-		imageSrc = "DR7";
+		imageSrc = "DR17";
 		particleColor = new Color(255,255,255,50);
 		particleSize = 2;
 	}
@@ -165,6 +165,10 @@ public class ApplicationProperties extends BaseProperties
 		else if("DR9".equals(imageSrc))
 		{
 			type = ObjectQuery.SDSSDR9;
+		}
+		else if("DR17".equals(imageSrc))
+		{
+			type = ObjectQuery.SDSSDR17;
 		}
 		else if("NED".equals(imageSrc))
 		{

@@ -52,6 +52,7 @@ public class ObjectLocationQueryPanel extends TableLayoutPanel implements Action
 	protected JRadioButton radDR7 = null;
 	protected JRadioButton radDR8 = null;
 	protected JRadioButton radDR9 = null;
+	protected JRadioButton radDR17 = null;
 	
 	protected ButtonGroup bg = null;
 	
@@ -121,29 +122,33 @@ public class ObjectLocationQueryPanel extends TableLayoutPanel implements Action
 		radDR7 = new JRadioButton("SDSS DR7");
 		radDR8 = new JRadioButton("SDSS DR8");
 		radDR9 = new JRadioButton("SDSS DR9");
+		radDR17 = new JRadioButton("SDSS DR17");
 		bg = new ButtonGroup();
 		bg.add(radNED);
-		bg.add(radDR7);
-		bg.add(radDR8);
-		bg.add(radDR9);
+		//bg.add(radDR7);
+		//bg.add(radDR8);
+		//bg.add(radDR9);
+		bg.add(radDR17);
 		
 		radNED.addActionListener(this);
 		radDR7.addActionListener(this);
 		radDR8.addActionListener(this);
 		radDR9.addActionListener(this);
+		radDR17.addActionListener(this);
 		
-		radDR7.setSelected(true);
+		radDR17.setSelected(true);
 		
 		JPanel radPanel = new JPanel(new FlowLayout());
 		JLabel tmpLabel = new JLabel("Preferred Source:");
 		tmpLabel.setToolTipText(PREF_TIP);
 		radPanel.add(tmpLabel);
 		radPanel.add(radNED);
-		radPanel.add(radDR7);
-		radPanel.add(radDR8);
+		//radPanel.add(radDR7);
+		//radPanel.add(radDR8);
 		
 		// As of 20121026 I am seeing similar results from DR9 as DR8.
-		radPanel.add(radDR9);
+		//radPanel.add(radDR9);
+		radPanel.add(radDR17);
 		
 		add(radPanel,getRC(4,0,1,5));
 		
@@ -167,6 +172,7 @@ public class ObjectLocationQueryPanel extends TableLayoutPanel implements Action
 	    radDR7.setToolTipText(PREF_TIP);
 	    radDR8.setToolTipText(PREF_TIP);
 	    radDR9.setToolTipText(PREF_TIP);
+	    radDR17.setToolTipText(PREF_TIP);
 	}
 
 	public void actionPerformed(ActionEvent evt) 
@@ -219,6 +225,10 @@ public class ObjectLocationQueryPanel extends TableLayoutPanel implements Action
 		{
 			type = ObjectQuery.SDSSDR9;
 		}
+		else if(radDR17.isSelected())
+		{
+			type = ObjectQuery.SDSSDR17;
+		}
 	    ObjectInfo info = ObjectQuery.querySDSSByName(type,sdssId);
 	    if(info != null)
 	    {
@@ -243,6 +253,10 @@ public class ObjectLocationQueryPanel extends TableLayoutPanel implements Action
 		else if(radDR9.isSelected())
 		{
 			type = ObjectQuery.SDSSDR9;
+		}
+		else if(radDR17.isSelected())
+		{
+			type = ObjectQuery.SDSSDR17;
 		}
 		else if(radNED.isSelected())
 		{
@@ -295,6 +309,10 @@ public class ObjectLocationQueryPanel extends TableLayoutPanel implements Action
 		{
 			radDR9.setSelected(true);
 		}
+		else if("DR17".equals(defaultImageSrc))
+		{
+			radDR17.setSelected(true);
+		}
 		else if("NED".equals(defaultImageSrc))
 		{
 			radNED.setSelected(true);
@@ -318,6 +336,10 @@ public class ObjectLocationQueryPanel extends TableLayoutPanel implements Action
 		else if(radDR9.isSelected())
 		{
 			defaultImageSrc = "DR9";
+		}
+		else if(radDR17.isSelected())
+		{
+			defaultImageSrc = "DR17";
 		}
 
 		props.setImageSource(defaultImageSrc);

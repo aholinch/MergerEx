@@ -12,7 +12,17 @@ import java.net.URL;
 import java.util.List;
 
 import edu.gmu.cds.util.FileUtil;
+import jodd.http.Cookie;
+import jodd.http.HttpBrowser;
+import jodd.http.HttpRequest;
+import jodd.http.HttpResponse;
 
+/**
+ * updating this in August 2022.  DR7, DR8, DR9 no longer working.  Focusing on DR17.
+ * 
+ * @author aholinch
+ *
+ */
 public class SDSSCasQuery 
 {
 	public static final String TABLE_PHOTO  = "PhotoObjAll";
@@ -24,11 +34,13 @@ public class SDSSCasQuery
 	public static final String SQL1_DR7 = "select " + SDSSObject.FIELDS1_DR7 + " from "+TABLE_PHOTO+" where objID=";
 	public static final String SQL1_DR8 = "select " + SDSSObject.FIELDS1_DR8 + " from "+TABLE_PHOTO+" where objID=";
 	public static final String SQL1_DR9 = "select " + SDSSObject.FIELDS1_DR9 + " from "+TABLE_PHOTO+" where objID=";
+	public static final String SQL1_DR17 = "select " + SDSSObject.FIELDS1_DR17 + " from "+TABLE_PHOTO+" where objID=";
 	
 	/** Get fields from PhotoObjAll, just replace ra,dec */
 	public static final String SQL1COORDS_DR7 = "select " + SDSSObject.FIELDS1P_DR7 + " from "+TABLE_PHOTO+" p, dbo.fGetNearbyObjEq(RA,DEC,RAD) n where p.objID = n.objID and p.type=3";
 	public static final String SQL1COORDS_DR8 = "select " + SDSSObject.FIELDS1P_DR8 + " from "+TABLE_PHOTO+" p, dbo.fGetNearbyObjEq(RA,DEC,RAD) n where p.objID = n.objID and p.type=3";
 	public static final String SQL1COORDS_DR9 = "select " + SDSSObject.FIELDS1P_DR9 + " from "+TABLE_PHOTO+" p, dbo.fGetNearbyObjEq(RA,DEC,RAD) n where p.objID = n.objID and p.type=3";
+	public static final String SQL1COORDS_DR17 = "select " + SDSSObject.FIELDS1P_DR17+ " from "+TABLE_PHOTO+" p, dbo.fGetNearbyObjEq(RA,DEC,RAD) n where p.objID = n.objID and p.type=3 order by n.distance";
 
 	/** Get fields from SpecPhotoAll just append objID */
 	public static final String SQL2 = "select " + SDSSObject.FIELDS2 + " from "+TABLE_SPEC+" where objID=";
@@ -48,21 +60,30 @@ public class SDSSCasQuery
     // DR9
 	public static final String CASSQLURL_DR9 = "http://skyserver.sdss3.org/dr9/en/tools/search/x_sql.asp?cmd=SQL&name=TABLE&format=xml";
 	public static final String CASIMGURL_DR9 = "http://skyservice.pha.jhu.edu/DR9/ImgCutout/getjpeg.aspx?ra=RA&dec=DEC&scale=SCALE&width=NX&height=NY";
-	
-    public static final int DR7 = 7;
+	// DR17
+	public static final String CASSQLURL_DR17 = "http://skyserver.sdss.org/dr17/SearchTools/sql?searchtool=SQL&TaskName=Skyserver.Search.SQL&syntax=NoSyntax&cmd=SSQQLL&format=XML&TableName=&ReturnHtml=true";
+	public static final String CASIMGURL_DR17 = "https://skyserver.sdss.org/dr17/SkyServerWS/ImgCutout/getjpeg?TaskName=Skyserver.Explore.Image&ra=RA&dec=DEC&scale=SCALE&width=NX&height=NY";
+   
+	public static final int DR7 = 7;
     public static final int DR8 = 9;
     public static final int DR9 = 10;
+    public static final int DR17 = 11;
     
-    public int type = DR7;
+    public int type = DR17;
+    
+    protected HttpBrowser httpClient;
+    protected boolean hasGottenCookies;
+    protected String rvt = null;
     
 	public SDSSCasQuery()
 	{
-		this(DR7);
+		this(DR17);
 	}
 	
 	public SDSSCasQuery(int type)
 	{
 		this.type = type;
+		httpClient = new HttpBrowser();
 	}
 	
 	public String getSQL1()
@@ -75,6 +96,10 @@ public class SDSSCasQuery
 		else if(type == DR9)
 		{
 			sql = SQL1_DR9;
+		}
+		else if(type == DR17)
+		{
+			sql = SQL1_DR17;
 		}
 		
 		return sql;
@@ -91,6 +116,11 @@ public class SDSSCasQuery
 		{
 			sql = SQL1COORDS_DR9;
 		}
+		else if(type == DR17)
+		{
+			sql = SQL1COORDS_DR17;
+		}
+
 		return sql;
 	}
 	
@@ -105,6 +135,11 @@ public class SDSSCasQuery
 		{
 			url = CASIMGURL_DR9;
 		}
+		else if(type == DR17)
+		{
+			url = CASIMGURL_DR17;
+		}
+
 		return url;
 	}
 	
@@ -119,6 +154,11 @@ public class SDSSCasQuery
 		{
 			url = CASSQLURL_DR9;
 		}
+		else if(type == DR17)
+		{
+			url = CASSQLURL_DR17;
+		}
+
 		return url;
 	}
 	
@@ -231,6 +271,7 @@ public class SDSSCasQuery
 		// get photo info
 		xml = getXMLFromObjIdSql(getSQL1(),TABLE_PHOTO,objId);
 		
+		System.out.println(xml);
 		if(xml != null && xml.trim().length() > 0)
 		{
 			obj = SDSSObject.parseFromXMLString(xml);
@@ -240,13 +281,20 @@ public class SDSSCasQuery
 		if(getRedshift && obj != null)
 		{
 			xml = getXMLFromObjIdSql(SQL2,TABLE_SPEC,objId);
+			//System.out.println(xml);
 			obj.setSpecInfo(xml);
 			
 			xml = getXMLFromObjIdSql(SQL3,TABLE_PHOTOZ,objId);
+			//System.out.println(xml);
 			obj.setPhotoZInfo(xml);
 
+			// No photoz2 anymore
+			/*
 			xml = getXMLFromObjIdSql(SQL4,TABLE_PHOTOZ2,objId);
+			System.out.println(xml);
 			obj.setPhotoZ2Info(xml);
+			*/
+			obj.setDerivedValues();
 		}
 		
 		return obj;
@@ -263,7 +311,7 @@ public class SDSSCasQuery
 	 */
 	public SDSSObject getObjectByRaDec(double ra, double dec)
 	{
-		return getObjectByRaDec(ra, dec, true, true);
+		return getObjectByRaDec(ra, dec, true, false);
 	}
 	
 	/**
@@ -329,8 +377,13 @@ public class SDSSCasQuery
 			xml = getXMLFromObjIdSql(SQL3,TABLE_PHOTOZ,objId);
 			obj.setPhotoZInfo(xml);
 
+			// No photoz2 anymore
+			/*
 			xml = getXMLFromObjIdSql(SQL4,TABLE_PHOTOZ2,objId);
+			System.out.println(xml);
 			obj.setPhotoZ2Info(xml);
+			*/
+
 			
 			obj.setDerivedValues();
 		}
@@ -349,21 +402,28 @@ public class SDSSCasQuery
 	{
 		String url = getSQLURL();
 		sql += objId;
-		
 		// ensure no strange characters in the URL
 		try
 		{
-			sql = java.net.URLEncoder.encode(sql,"UTF-8");
+			//sql = java.net.URLEncoder.encode(sql,"UTF-8");
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
 		
-		url = url.replaceAll("TABLE",table);
-		url = url.replaceAll("SQL",sql);
 
-		String xml = getStringFromURL(url);
+		if(!hasGottenCookies)
+		{
+			initCookies();
+		}
+		
+		url = url.replaceAll("SSQQLL", sql);
+		
+		url+=rvt;
+		//System.out.println(url);
+		
+		String xml = getStringFromURL(url,true);
 
 		return xml;
 	}
@@ -386,21 +446,32 @@ public class SDSSCasQuery
 		// ensure no strange characters in the URL
 		try
 		{
-			sql = java.net.URLEncoder.encode(sql,"UTF-8");
+			//sql = java.net.URLEncoder.encode(sql,"UTF-8");
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
 		url = url.replaceAll("TABLE",table);
-		url = url.replaceAll("SQL",sql);
+		url = url.replaceAll("SSQQLL",sql);
 
 		//System.out.println(url);		
 
-		String xml = getStringFromURL(url);
 
+		System.out.println(sql);
+		if(!hasGottenCookies)
+		{
+			initCookies();
+		}
+		
+		url+=rvt;
+		
+
+		String xml = getStringFromURL(url,true);
 		return xml;
 	}
+	
+	public Cookie[] cookies = null;
 	
 	/**
 	 * Fetch the URL content and return as a string.
@@ -410,29 +481,91 @@ public class SDSSCasQuery
 	 */
 	public String getStringFromURL(String urlStr)
 	{
-		URL url = null;
-		InputStream is = null;
-		HttpURLConnection conn = null;
+		return getStringFromURL(urlStr, false);
+	}
+	
+	public String getStringFromURL(String urlStr, boolean doPost)
+	{
+
 		String str = null;
 		
 		try
 		{
-			url = new URL(urlStr);
-			conn = (HttpURLConnection)url.openConnection();
+			
+			HttpRequest req = HttpRequest.get(urlStr);
+			if(doPost)
+			{
+				int ind = urlStr.indexOf('?');
+				String params = urlStr.substring(ind+1).trim();
+				urlStr = urlStr.substring(0,ind);
+				req = HttpRequest.post(urlStr);
 
-			is = conn.getInputStream();
-			str = new String(FileUtil.getBytesFromStream(is));
+				//params = params.replace('&', '\n');
+				req.body(params);
+				req.header("Content-type","application/x-www-form-urlencoded");
+				
+			}
+			/*
+			System.out.println("Setting cookies to the next request\t"+cookies);
+			if(cookies != null)for(int i=0;i<cookies.length; i++)
+			{
+				Cookie c = cookies[i];
+				System.out.println("input cookie\t"+c.getName()+"\t"+c.getPath()+"\t"+c.getValue());
+			}
+			*/
+
+			if(cookies != null)req.cookies(cookies);
+			req.header("User-Agent", "Mozilla/5.0 (Windows NT x.y; rv:10.0) Gecko/20100101 Firefox/10.0");
+			req.header("Referer","http://skyserver.sdss.org/dr17/SearchTools/sql");
+			req.header("Origin","http://skyserver.sdss.org");
+			req.header("Host","skyserver.sdss.org");
+			//req.header("DNT","1");
+			//req.header("Connection","keep-alive");
+			req.header("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+			
+			//System.out.println(req.toString());
+			HttpResponse resp = httpClient.sendRequest(req);
+			
+			if(!hasGottenCookies)cookies = resp.cookies();
+			str = resp.bodyText();
+
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 		}
-		finally
-		{
-			FileUtil.close(is);
-			if(conn != null)try{conn.disconnect();}catch(Exception ex){};
-		}
 		
 		return str;
+	}
+	
+	protected void initCookies()
+	{
+		try
+		{
+			// the sql server wants you to hit a query page first, snag some cookies and __RequestVerificationToken
+		
+			String url = "http://skyserver.sdss.org/dr17/SearchTools/sql";
+			String output = getStringFromURL(url);
+			
+			int ind = output.indexOf("<input name=\"__RequestVerificationToken\"");
+			if(ind > 0)
+			{
+				output = output.substring(ind);
+				ind = output.indexOf("/>");
+				output = output.substring(0,ind);
+				ind = output.indexOf("value=\"");
+				output = output.substring(ind+7).trim();
+				ind = output.indexOf('"');
+				output = output.substring(0,ind).trim();
+				
+				rvt = "&__RequestVerificationToken="+output;
+				this.hasGottenCookies=true;
+			}
+			
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
 	}
 }
