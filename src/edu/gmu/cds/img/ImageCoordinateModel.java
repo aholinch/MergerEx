@@ -20,6 +20,7 @@ public class ImageCoordinateModel
 	protected double ang2size;
 	protected double yres;
 	protected double xres;
+
 	
 	public ImageCoordinateModel()
 	{
@@ -94,8 +95,14 @@ public class ImageCoordinateModel
      */
     public double[] convertAnglesToPixels(double ang1, double ang2)
     {
-    	double x = 0;
-    	double y = 0;
+    	double x = ang1-ang1c;
+    	double y = ang2-ang2c;
+    	
+    	x/=xres;
+    	y/=yres;
+    	
+    	x = 0.5*nx-x;
+    	y = y+0.5*ny;
     	
     	double xy[] = {x,y};
     	return xy;

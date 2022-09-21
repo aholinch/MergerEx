@@ -590,7 +590,7 @@ public class MainPanel extends JPanel implements SimulationHandler, StateClickLi
 		UIHelper.setLookAndFeel();
 		MainPanel mp = new MainPanel();
 		
-		JFrame f = new JFrame("Target Prep");
+		JFrame f = new JFrame("Target Search");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setSize(700, 675);
 		f.getContentPane().add(mp);

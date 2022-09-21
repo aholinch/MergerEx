@@ -227,7 +227,7 @@ public class DiskSetupPanel extends JPanel implements TargetDataHandler, ChangeL
 		info = data.getSecondaryDiskInfo();
 		secondaryOrientationPanel.setDiskInfo(info);
 		setSecondaryPosition(info);
-		dataChanged = false;
+		dataChanged = true;
 	}
 
 	@Override
@@ -534,7 +534,7 @@ public class DiskSetupPanel extends JPanel implements TargetDataHandler, ChangeL
 		{
 			infos.add(info);
 		}
-		
+		//System.out.println("dsp\t"+px+"\t"+py+"\t"+sx+"\t"+sy);
 		info = new DiskInfo();
 		info.setXC(sx);
 		info.setYC(sy);
