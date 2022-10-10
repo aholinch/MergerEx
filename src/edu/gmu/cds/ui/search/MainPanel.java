@@ -367,6 +367,10 @@ public class MainPanel extends JPanel implements SimulationHandler, StateClickLi
 		if(retVal == JFileChooser.APPROVE_OPTION)
 		{	
 			File f = jfc.getSelectedFile();
+			if(!f.getName().endsWith(".txt"))
+			{
+				f = new File(f.getAbsoluteFile()+".txt");
+			}
 			stateFile.save(f.getAbsolutePath());
 		}
 	}
